@@ -1,0 +1,20 @@
+{# Bảng trả về: bắt buộc lý do. Cần: action_url, recipient, reasons. Nằm trong x-data có biến sheet. #}
+<div class="sheet-backdrop" x-show="sheet === 'return'" x-cloak x-transition.opacity @click.self="sheet = ''" @keydown.escape.window="sheet = ''">
+  <form method="post" action="{{ action_url }}" class="sheet" x-data="{ choice: '', note: '' }">
+    {% csrf_token %}<input type="hidden" name="action" value="return">
+    <h3>Trả về</h3>
+    <p class="muted small">Sẽ về lại {{ recipient }} để sửa. Chọn lý do hoặc ghi lý do khác.</p>
+    <div class="chips">
+      {% for r in reasons %}
+      <label class="chip"><input type="radio" name="reason_choice" value="{{ r.text }}" x-model="choice" @click="if (choice === $el.value) { $nextTick(() => { choice = '' }) }"><span>{{ r.text }}</span></label>
+      {% endfor %}
+    </div>
+    <label class="field"><span>Ghi thêm</span>
+      <textarea name="note" rows="3" x-model="note" placeholder="Lý do khác, hoặc nói rõ cần sửa gì"></textarea>
+    </label>
+    <div class="row">
+      <button type="button" class="btn" @click="sheet = ''">Thôi</button>
+      <button class="btn btn-danger-solid grow" :disabled="!choice && !note.trim()">Gửi trả về</button>
+    </div>
+  </form>
+</div>

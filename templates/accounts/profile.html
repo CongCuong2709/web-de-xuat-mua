@@ -10,11 +10,21 @@
       <dt>Phòng ban</dt><dd>{{ user.department|default:"—" }}</dd>
       <dt>Vai trò</dt><dd>{% for r in user.roles.all %}<span class="pill pill-role">{{ r.name }}</span> {% empty %}—{% endfor %}</dd>
       <dt>Trưởng phòng trực tiếp</dt><dd>{{ user.manager|default:"—" }}</dd>
-      {% if user.bank_account_number %}
-      <dt>Tài khoản nhận tiền</dt><dd>{{ user.bank_account_number }} · {{ user.bank_name }}<br><span class="muted">{{ user.bank_account_holder }}</span></dd>
-      {% endif %}
     </dl>
     <p class="muted small">Thông tin sai? Báo quản trị viên để sửa.</p>
+  </div>
+  {% if show_bank %}
+  <form method="post" class="card" id="ngan-hang">
+    {% csrf_token %}<input type="hidden" name="next" value="{{ next }}">
+    <h3 class="card-title">Tài khoản nhận tiền</h3>
+    <p class="muted small">Tạm ứng và tiền hoàn sẽ chuyển vào tài khoản này.</p>
+    <label class="field"><span>Ngân hàng</span><input name="bank_name" class="input" value="{{ user.bank_name }}" placeholder="Ví dụ: Vietcombank"></label>
+    <label class="field"><span>Số tài khoản</span><input name="bank_account_number" class="input" value="{{ user.bank_account_number }}" inputmode="numeric"></label>
+    <label class="field"><span>Chủ tài khoản</span><input name="bank_account_holder" class="input" value="{{ user.bank_account_holder }}" placeholder="VIET HOA KHONG DAU"></label>
+    <button class="btn btn-block">Lưu tài khoản nhận tiền</button>
+  </form>
+  {% endif %}
+  <div class="card">
     <div class="profile-actions">
       <a href="{% url 'password_change' %}" class="btn btn-block">Đổi mật khẩu</a>
       {% if user.is_staff %}<a href="{% url 'admin:index' %}" class="btn btn-block">Trang quản trị</a>{% endif %}

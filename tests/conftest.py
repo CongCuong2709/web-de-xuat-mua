@@ -4,10 +4,11 @@ from accounts.models import Department, Role, User
 
 
 @pytest.fixture(autouse=True)
-def _test_settings(settings):
+def _test_settings(settings, tmp_path):
     settings.STORAGES = {**settings.STORAGES, "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}}
     settings.PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]  # test nhanh
+    settings.MEDIA_ROOT = tmp_path / "media"  # file test không lẫn vào data/
 
 
 def make_user(username, *roles, manager=None, department=None):
@@ -37,4 +38,6 @@ def org(db):
     o.ct = make_user("ct", Role.CHU_TICH)
     o.ketoan = make_user("ketoan", Role.KE_TOAN)
     o.thumua = make_user("thumua", Role.THU_MUA)
+    o.thumua.bank_name, o.thumua.bank_account_number, o.thumua.bank_account_holder = "VCB", "0123", "VU THU MUA"
+    o.thumua.save()
     return o

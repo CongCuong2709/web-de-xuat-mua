@@ -42,6 +42,20 @@ Bước nào cũng trả về được (bắt buộc lý do), đơn về ngườ
 Người tạo được hủy khi đơn bị trả về hoặc trưởng phòng chưa xử lý.
 Luật nằm trong `proposals/workflow.py`; đổi luật thì sửa ở đó và test trong `tests/test_workflow.py`.
 
+## Luồng tiền (Chặng 3)
+
+Đề xuất đã duyệt → thu mua chọn một trong hai:
+
+- **Xin tạm ứng (TU)**: Chủ tịch duyệt → Kế toán chuyển tiền → thu mua mua hàng, đề nghị hoàn ứng (ghi số thực chi, kèm hóa đơn nếu có) → Chủ tịch duyệt hoàn ứng.
+- **Đã tự ứng, đề nghị thanh toán (TT)**: bắt buộc kèm hóa đơn → Kế toán duyệt chi → Chủ tịch duyệt và hoàn tiền.
+
+Tiền luôn về tài khoản của thu mua (thu mua tự cập nhật ở trang Tài khoản). Mỗi đề xuất một phiếu đang chạy; hủy phiếu thì lập phiếu mới.
+Phiếu hoàn tất → đề xuất chuyển sang Hoàn thành. Thừa/thiếu khi hoàn ứng chỉ hiển thị, chưa có luồng xử lý riêng.
+Luật nằm trong `proposals/payments.py`, test trong `tests/test_payments.py`.
+
+File đính kèm (ảnh, PDF, Word, Excel; tối đa 15 MB/file, ảnh lớn tự thu nhỏ) lưu trong `data/media/`,
+chỉ tải được qua `/tep/<id>/` khi người xem có quyền xem đề xuất đó.
+
 ## Cấu hình theo máy
 
 Tạo file `.env` ở thư mục gốc (không đưa lên git):
@@ -63,7 +77,7 @@ Sao lưu = chép cả thư mục `data/`.
 config/      cấu hình Django, urls
 accounts/    người dùng, phòng ban, vai trò, đăng nhập, đổi mật khẩu
 core/        cấu hình chung (mốc tiền), lý do trả về
-proposals/   đề xuất, món, lịch sử duyệt; workflow.py = luật duyệt (một chỗ duy nhất)
+proposals/   đề xuất, phiếu tiền, file, lịch sử; workflow.py = luật duyệt, payments.py = luật tiền
 templates/   giao diện
 static/      CSS, htmx, alpine (không cần Node)
 tests/       pytest

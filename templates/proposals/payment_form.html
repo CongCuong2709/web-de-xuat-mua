@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load money %}
+{% block title %}{% if pay %}Sửa {{ pay.code }}{% else %}Xin tiền cho {{ p.code }}{% endif %} · Đề xuất mua sắm{% endblock %}
+{% block bodyclass %}no-tabbar{% endblock %}
+{% block content %}
+<header class="topbar">
+  <a href="{% if pay %}{% url 'payment_detail' pay.code %}{% else %}{% url 'proposal_detail' p.code %}{% endif %}" class="back" aria-label="Quay lại">←</a>
+  <span>{% if pay %}Sửa {{ pay.code }}{% else %}Thu mua đề nghị tiền{% endif %}</span>
+</header>
+
+<div class="narrow-form">
+  {% if returned %}
+  <div class="flash flash-error"><strong>{{ returned.step_name }} {{ returned.actor }} trả về:</strong> {{ returned.note }}</div>
+  {% endif %}
+  {% for e in errors %}<div class="flash flash-error">{{ e }}</div>{% endfor %}
+
+  <form method="post" enctype="multipart/form-data" class="stack"
+        x-data="{ kind: '{% if kind == 'thanh_toan' %}thanh-toan{% else %}tam-ung{% endif %}', files: 0 }">
+    {% csrf_token %}
+    <div class="card">
+      <div class="muted small">Đề xuất đã duyệt</div>
+      <div class="pcard-row"><strong>{{ p.code }} · {{ p.title }}</strong><span class="nowrap">{{ p.total|vnd }} đ</span></div>
+    </div>
+
+    {% if not pay %}
+    <div class="card">
+      <h3 class="card-title">Bạn cần gì?</h3>
+      <div class="segmented">
+        <label><input type="radio" name="loai" value="tam-ung" x-model="kind"><span><strong>Xin tạm ứng</strong><small>Chưa mua, cần tiền trước</small></span></label>
+        <label><input type="radio" name="loai" value="thanh-toan" x-model="kind"><span><strong>Đã tự ứng tiền</strong><small>Đã mua, đề nghị hoàn tiền</small></span></label>
+      </div>
+      <div class="route" x-show="kind === 'tam-ung'">Chủ tịch duyệt → Kế toán chuyển tiền → bạn mua hàng → đề nghị hoàn ứng → Chủ tịch duyệt</div>
+      <div class="route" x-show="kind === 'thanh-toan'" x-cloak>Kế toán duyệt → Chủ tịch duyệt và hoàn tiền cho bạn. Bắt buộc kèm hóa đơn.</div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <label class="field"><span x-text="kind === 'tam-ung' ? 'Số tiền xin tạm ứng (đ)' : 'Số tiền đã chi, theo hóa đơn (đ)'">Số tiền (đ)</span>
+        <input name="amount" class="input input-money" value="{{ data.amount }}" inputmode="numeric" required>
+      </label>
+      <label class="field"><span>Ghi chú</span>
+        <textarea name="note" rows="2" placeholder="Ví dụ: mua ở cửa hàng X, giao trong tuần">{{ data.note }}</textarea>
+      </label>
+      <label class="field">
+        <span>Hóa đơn, chứng từ <b class="req" x-show="kind === 'thanh-toan'">*</b><small class="muted" x-show="kind === 'tam-ung'"> (không bắt buộc)</small></span>
+        <input type="file" name="files" multiple accept="{{ accept }}" @change="files = $el.files.length">
+        <small class="muted">Chụp trực tiếp bằng điện thoại được. Ảnh lớn sẽ tự thu nhỏ.</small>
+      </label>
+      {% if files %}{% with removable=True %}{% include "proposals/_files.html" %}{% endwith %}{% endif %}
+    </div>
+
+    <div class="card">
+      <h3 class="card-title">Tiền chuyển vào</h3>
+      {% if user.bank_account_number %}
+        <div>{{ user.bank_account_number }} · {{ user.bank_name }}</div>
+        <div class="muted">{{ user.bank_account_holder }}</div>
+        <a class="small" href="{% url 'profile' %}?next={{ request.get_full_path|urlencode }}#ngan-hang">Đổi tài khoản</a>
+      {% else %}
+        <div class="flash flash-error">Bạn chưa có tài khoản nhận tiền.</div>
+        <a class="btn btn-block" href="{% url 'profile' %}?next={{ request.get_full_path|urlencode }}#ngan-hang">Cập nhật tài khoản nhận tiền</a>
+      {% endif %}
+    </div>
+
+    <div class="submitbar">
+      <button class="btn btn-primary btn-block"
+              {% if not user.bank_account_number %}disabled{% elif not files %}:disabled="kind === 'thanh-toan' && files === 0"{% endif %}
+              x-text="'{% if pay %}Gửi lại{% else %}Gửi đề nghị{% endif %}' + (kind === 'tam-ung' ? ' tạm ứng' : ' thanh toán')">Gửi</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Tạm ứng và thanh toán · Đề xuất mua sắm{% endblock %}
+{% block content %}
+<header class="page-head"><h1>Tạm ứng và thanh toán</h1></header>
+<form class="filters" method="get" action="{% url 'payment_list' %}"
+      hx-get="{% url 'payment_list' %}" hx-target="#results" hx-push-url="true"
+      hx-trigger="input changed delay:300ms from:input[name=q], change">
+  <input type="search" name="q" value="{{ q }}" class="input search" placeholder="Tìm theo mã phiếu, mã đề xuất, nội dung, thu mua" aria-label="Tìm kiếm">
+  <select name="loai" class="input" aria-label="Loại phiếu">
+    <option value="">Mọi loại</option>
+    {% for k, label in kinds %}<option value="{{ k }}" {% if kind == k %}selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <div class="chips chips-scroll">
+    {% for key, label in groups %}
+    <label class="chip"><input type="radio" name="nhom" value="{{ key }}" {% if group == key %}checked{% endif %}><span>{{ label }}</span></label>
+    {% endfor %}
+  </div>
+  <noscript><button class="btn">Lọc</button></noscript>
+</form>
+<div id="results">{% include "proposals/_payment_table.html" %}</div>
+{% endblock %}

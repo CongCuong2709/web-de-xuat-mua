@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load money %}
+{% block title %}Hoàn ứng {{ pay.code }} · Đề xuất mua sắm{% endblock %}
+{% block bodyclass %}no-tabbar{% endblock %}
+{% block content %}
+<header class="topbar">
+  <a href="{% url 'payment_detail' pay.code %}" class="back" aria-label="Quay lại">←</a>
+  <span>Đề nghị hoàn tạm ứng</span>
+</header>
+
+<div class="narrow-form">
+  {% if returned %}
+  <div class="flash flash-error"><strong>Chủ tịch {{ returned.actor }} trả về:</strong> {{ returned.note }}</div>
+  {% endif %}
+  {% for e in errors %}<div class="flash flash-error">{{ e }}</div>{% endfor %}
+
+  <form method="post" enctype="multipart/form-data" class="stack"
+        x-data="{ adv: {{ pay.amount }}, spent: '{{ data.spent }}', get n() { return Number(String(this.spent).replace(/[^\d]/g, '')) || 0 }, fmt(v) { return v.toLocaleString('vi-VN') } }">
+    {% csrf_token %}
+    <div class="card">
+      <div class="muted small">{{ pay.code }} · {{ pay.proposal.code }}</div>
+      <div class="pcard-title">{{ pay.proposal.title }}</div>
+      <div class="pcard-row"><span class="muted">Đã nhận tạm ứng</span><strong>{{ pay.amount|vnd }} đ</strong></div>
+    </div>
+
+    <div class="card">
+      <label class="field"><span>Số tiền thực chi (đ) <b class="req">*</b></span>
+        <input name="spent" class="input input-money" x-model="spent" inputmode="numeric" required>
+      </label>
+      <div class="route" :class="n !== adv ? 'route-high' : ''"
+           x-text="n === adv ? 'Khớp số tạm ứng.' : (n < adv ? 'Thừa ' + fmt(adv - n) + ' đ so với tạm ứng.' : 'Chi vượt ' + fmt(n - adv) + ' đ so với tạm ứng.')"></div>
+      <label class="field mt"><span>Hóa đơn, chứng từ (nếu có)</span>
+        <input type="file" name="files" multiple accept="{{ accept }}">
+      </label>
+      <label class="field"><span>Ghi chú</span>
+        <textarea name="note" rows="2" placeholder="Ví dụ: cửa hàng không xuất hóa đơn">{{ data.note }}</textarea>
+      </label>
+    </div>
+
+    <p class="muted small">Đề nghị hoàn ứng đi thẳng đến Chủ tịch duyệt.</p>
+    <div class="submitbar">
+      <button class="btn btn-primary btn-block">Gửi đề nghị hoàn ứng</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

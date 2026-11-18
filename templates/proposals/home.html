@@ -2,42 +2,74 @@
 {% load money humanize %}
 {% block title %}Chờ tôi xử lý · Đề xuất mua sắm{% endblock %}
 {% block content %}
-<div class="split">
+<div class="split" x-data="{ tab: '' }">
   <section class="split-list">
     <header class="page-head">
       <h1>Chờ tôi xử lý</h1>
-      <p class="muted">{% if items %}{{ items|length }} việc đang chờ bạn{% else %}Xin chào {{ user.display_name }}{% endif %}</p>
+      <p class="muted">{% if cards %}{{ cards|length }} việc đang chờ bạn{% else %}Xin chào {{ user.display_name }}{% endif %}</p>
     </header>
-    {% for p in items %}
-      {% with last=p.last_log %}
-      <a class="card pcard js-pane-link" href="{% url 'proposal_detail' p.code %}" data-pane-url="{% url 'proposal_detail' p.code %}?pane=1">
-        <div class="pcard-row"><span class="code">{{ p.code }}</span><span class="muted small">{{ p.updated_at|naturaltime }}</span></div>
-        <div class="pcard-title">{{ p.title }}</div>
-        <div class="pcard-row">
-          <span class="muted small">{{ p.creator }}{% if p.department %} · {{ p.department }}{% endif %}</span>
-          <span class="pcard-amount">{{ p.total|vnd }} đ</span>
-        </div>
-        <div class="pcard-row">
-          {% if p.status == "tra_ve" %}
-            <span class="pill pill-back">Bị trả về{% if last.note %}: {{ last.note|truncatechars:60 }}{% endif %}</span>
-          {% else %}
-            <span class="pill pill-wait">{{ p.get_status_display }}</span>
-            {% if last %}<span class="muted small">{{ last.short }}</span>{% endif %}
-          {% endif %}
-        </div>
-      </a>
-      {% endwith %}
+    {% if show_tabs %}
+    <div class="chips chips-scroll home-tabs">
+      <label class="chip"><input type="radio" value="" x-model="tab"><span>Tất cả</span></label>
+      {% if "mua" in types %}<label class="chip"><input type="radio" value="mua" x-model="tab"><span>Duyệt mua</span></label>{% endif %}
+      {% if "tam_ung" in types %}<label class="chip"><input type="radio" value="tam_ung" x-model="tab"><span>Tạm ứng</span></label>{% endif %}
+      {% if "thanh_toan" in types %}<label class="chip"><input type="radio" value="thanh_toan" x-model="tab"><span>Thanh toán</span></label>{% endif %}
+    </div>
+    {% endif %}
+    {% for c in cards %}
+      {% if c.type == "mua" %}
+        {% with p=c.obj last=c.obj.last_log %}
+        <a class="card pcard js-pane-link" x-show="!tab || tab === 'mua'" href="{% url 'proposal_detail' p.code %}" data-pane-url="{% url 'proposal_detail' p.code %}?pane=1">
+          <div class="pcard-row"><span class="code">{{ p.code }}</span><span class="muted small">{{ p.updated_at|naturaltime }}</span></div>
+          <div class="pcard-title">{{ p.title }}</div>
+          <div class="pcard-row">
+            <span class="muted small">{{ p.creator }}{% if p.department %} · {{ p.department }}{% endif %}</span>
+            <span class="pcard-amount">{{ p.total|vnd }} đ</span>
+          </div>
+          <div class="pcard-row">
+            {% if p.status == "tra_ve" %}
+              <span class="pill pill-back">Bị trả về{% if last.note %}: {{ last.note|truncatechars:60 }}{% endif %}</span>
+            {% elif p.status == "da_duyet" %}
+              <span class="pill pill-done">Đã duyệt · chờ mua</span>
+              <span class="muted small">Xin tạm ứng hoặc đề nghị thanh toán</span>
+            {% else %}
+              <span class="pill pill-wait">{{ p.get_status_display }}</span>
+              {% if last %}<span class="muted small">{{ last.short }}</span>{% endif %}
+            {% endif %}
+          </div>
+        </a>
+        {% endwith %}
+      {% else %}
+        {% with x=c.obj last=c.obj.last_log %}
+        <a class="card pcard js-pane-link" x-show="!tab || tab === '{{ c.type }}'" href="{% url 'payment_detail' x.code %}" data-pane-url="{% url 'payment_detail' x.code %}?pane=1">
+          <div class="pcard-row"><span class="code">{{ x.code }}</span><span class="muted small">{{ x.updated_at|naturaltime }}</span></div>
+          <div class="pcard-title">{{ x.title }}</div>
+          <div class="pcard-row">
+            <span class="muted small">{{ x.requester }} · {{ x.proposal.code }}{% if x.attachments.exists %} · có chứng từ{% endif %}</span>
+            <span class="pcard-amount">{% if x.status == "cho_ct_hoan_ung" %}{{ x.spent|vnd }}{% else %}{{ x.amount|vnd }}{% endif %} đ</span>
+          </div>
+          <div class="pcard-row">
+            {% if last.action == "return" %}
+              <span class="pill pill-back">{{ last.step_name }} trả về{% if last.note %}: {{ last.note|truncatechars:50 }}{% endif %}</span>
+            {% else %}
+              <span class="pill {{ x.pill_class }}">{{ x.get_status_display }}</span>
+              {% if last %}<span class="muted small">{{ last.short }}</span>{% endif %}
+            {% endif %}
+          </div>
+        </a>
+        {% endwith %}
+      {% endif %}
     {% empty %}
       <div class="card empty">
         <div class="empty-icon">✓</div>
         <p><strong>Không có việc nào đang chờ bạn.</strong></p>
-        <p class="muted">Đề xuất cần bạn duyệt hoặc sửa sẽ hiện ở đây.</p>
+        <p class="muted">Việc cần bạn duyệt, sửa hoặc mua sẽ hiện ở đây.</p>
         {% if can_create %}<p><a class="btn btn-primary" href="{% url 'proposal_create' %}">Tạo đề xuất</a></p>{% endif %}
       </div>
     {% endfor %}
   </section>
   <section id="pane" class="split-pane">
-    <div class="pane-empty muted">Chọn một đề xuất bên trái để xem chi tiết.</div>
+    <div class="pane-empty muted">Chọn một việc bên trái để xem chi tiết.</div>
   </section>
 </div>
 {% endblock %}

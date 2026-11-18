@@ -9,6 +9,9 @@ Luồng:
     Bất kỳ bước duyệt nào cũng có thể trả về (bắt buộc lý do) -> về người tạo
         -> sửa và gửi lại -> bắt đầu lại từ Trưởng phòng. Không giới hạn số lần.
     Người tạo được hủy khi đơn đang bị trả về hoặc trưởng phòng chưa xử lý.
+
+Sau khi Đã duyệt: thu mua xin tạm ứng hoặc đề nghị thanh toán tự ứng. Luật phần tiền nằm
+ở payments.py; đề xuất chuyển sang Hoàn thành khi phiếu tiền hoàn tất.
 """
 from django.db import transaction
 from django.db.models import Q
@@ -17,12 +20,14 @@ from django.utils import timezone
 from accounts.models import Role
 from core.models import AppSettings
 
-from .models import ApprovalLog, Proposal, ProposalItem
+from . import attachments
+from .models import ApprovalLog, PaymentRequest, Proposal, ProposalItem
 
 S = Proposal.Status
 A = ApprovalLog.Action
 
 APPROVE, RETURN, EDIT, CANCEL = "approve", "return", "edit", "cancel"
+REQUEST_MONEY = "request_money"  # thu mua xin tạm ứng / đề nghị thanh toán
 
 # Bước duyệt -> bước kế tiếp (Chủ tịch chỉ chen vào khi cần)
 _ROLE_FOR_STEP = {S.CHO_GIAM_DOC: Role.GIAM_DOC, S.CHO_CHU_TICH: Role.CHU_TICH}
@@ -45,10 +50,20 @@ def is_approver(user, p):
     return bool(role) and user.has_role(role)
 
 
+def _has_active_payment(p):
+    return p.payments.exclude(status=PaymentRequest.Status.DA_HUY).exists()
+
+
+def can_request_money(user, p):
+    return p.status == S.DA_DUYET and user.has_role(Role.THU_MUA) and not _has_active_payment(p)
+
+
 def actions_for(user, p):
     acts = []
     if is_approver(user, p):
         acts += [APPROVE, RETURN]
+    if can_request_money(user, p):
+        acts.append(REQUEST_MONEY)
     if p.creator_id == user.pk:
         if p.status == S.TRA_VE:
             acts += [EDIT, CANCEL]
@@ -64,6 +79,10 @@ def pending_q(user):
         q |= Q(status=S.CHO_GIAM_DOC)
     if user.has_role(Role.CHU_TICH):
         q |= Q(status=S.CHO_CHU_TICH)
+    if user.has_role(Role.THU_MUA):
+        # Đơn đã duyệt mà chưa có phiếu tiền nào đang chạy: thu mua cần đi mua
+        active = PaymentRequest.objects.exclude(status=PaymentRequest.Status.DA_HUY).values("proposal_id")
+        q |= Q(status=S.DA_DUYET) & ~Q(pk__in=active)
     return q
 
 
@@ -109,22 +128,27 @@ def timeline(p, viewer=None):
     elif p.status == S.TRA_VE:
         steps.append({"state": "now", "title": f"{p.creator} sửa và gửi lại", "meta": now_meta})
     elif p.status == S.DA_DUYET:
-        steps.append({"state": "now", "title": "Thu mua mua hàng", "meta": "Đang chờ"})
+        pay = p.active_payment
+        if pay is None:
+            steps.append({"state": "now", "title": "Thu mua mua hàng, xin tạm ứng hoặc đề nghị thanh toán",
+                          "meta": now_meta})
+        else:
+            from .payments import upcoming  # tránh import vòng
+            steps += upcoming(pay, viewer)
     return steps
 
 
 # ---------- Thao tác ----------
 
-def _next_code():
-    prefix = timezone.localtime().strftime("MS-%Y%m-")
-    last = (
-        Proposal.objects.filter(code__startswith=prefix).order_by("-code").values_list("code", flat=True).first()
-    )
+def next_code(model, kind="MS"):
+    """Mã bất biến dạng KIND-YYYYMM-NNNN, đánh số lại mỗi tháng. Gọi trong transaction."""
+    prefix = timezone.localtime().strftime(f"{kind}-%Y%m-")
+    last = model.objects.filter(code__startswith=prefix).order_by("-code").values_list("code", flat=True).first()
     n = int(last[-4:]) + 1 if last else 1
     return f"{prefix}{n:04d}"
 
 
-def _save_content(p, title, reason, items):
+def _save_content(p, title, reason, items, user=None, files=(), remove_ids=()):
     title, reason = (title or "").strip(), (reason or "").strip()
     if not title:
         raise WorkflowError("Cần ghi rõ cần mua gì.")
@@ -145,6 +169,9 @@ def _save_content(p, title, reason, items):
         ProposalItem(proposal=p, order=i, name=it["name"], quantity=it["quantity"], unit_price=it.get("unit_price"))
         for i, it in enumerate(items)
     )
+    attachments.remove(remove_ids, p)
+    if files:
+        attachments.save(files, user, p)
 
 
 def _log(p, user, action, from_status, note=""):
@@ -160,26 +187,26 @@ def _reload(p):
 
 
 @transaction.atomic
-def create(user, title, reason, items):
+def create(user, title, reason, items, files=()):
     if not can_create(user):
         raise WorkflowError("Bạn không có quyền tạo đề xuất.")
     if not user.manager_id:
         raise WorkflowError("Bạn chưa có trưởng phòng trực tiếp. Hãy báo quản trị viên.")
-    p = Proposal(code=_next_code(), creator=user)
-    _save_content(p, title, reason, items)
+    p = Proposal(code=next_code(Proposal), creator=user)
+    _save_content(p, title, reason, items, user, files)
     _log(p, user, A.SUBMIT, "")
     return p
 
 
 @transaction.atomic
-def resubmit(user, p, title, reason, items):
+def resubmit(user, p, title, reason, items, files=(), remove_ids=()):
     p = _reload(p)
     if EDIT not in actions_for(user, p):
         raise WorkflowError("Đề xuất này không ở trạng thái sửa được.")
     if not user.manager_id:
         raise WorkflowError("Bạn chưa có trưởng phòng trực tiếp. Hãy báo quản trị viên.")
     before = p.status
-    _save_content(p, title, reason, items)
+    _save_content(p, title, reason, items, user, files, remove_ids)
     _log(p, user, A.RESUBMIT, before)
     return p
 

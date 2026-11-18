@@ -1,0 +1,12 @@
+<ol class="timeline">
+  {% for s in steps %}
+  <li class="tl tl-{{ s.state }}">
+    <span class="tl-dot"></span>
+    <div class="tl-body">
+      <div class="tl-title">{{ s.title }}</div>
+      <div class="muted small">{% if s.at %}{{ s.at|date:"d/m · H:i" }}{% else %}{{ s.meta }}{% endif %}</div>
+      {% if s.note %}<div class="tl-note">“{{ s.note }}”</div>{% endif %}
+    </div>
+  </li>
+  {% endfor %}
+</ol>

@@ -8,7 +8,7 @@ from itertools import zip_longest
 MAX_ITEMS = 50
 
 
-def _money(raw):
+def money(raw):
     digits = re.sub(r"[^\d]", "", raw or "")
     return int(digits) if digits else None
 
@@ -40,7 +40,7 @@ def parse_proposal(post):
         if q is None:
             errors.append(f"Dòng {i}: số lượng không hợp lệ.")
         if name and q is not None:
-            items.append({"name": name[:200], "quantity": q, "unit_price": _money(price)})
+            items.append({"name": name[:200], "quantity": q, "unit_price": money(price)})
     if len(items) > MAX_ITEMS:
         errors.append(f"Tối đa {MAX_ITEMS} món một đề xuất.")
     data = {

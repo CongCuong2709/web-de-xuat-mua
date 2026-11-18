@@ -1,0 +1,15 @@
+{# Danh sách file đính kèm. Cần: files. Tùy chọn: removable (hiện ô đánh dấu xóa). #}
+{% load money %}
+<ul class="files">
+  {% for f in files %}
+  <li>
+    <a href="{% url 'attachment' f.pk %}" target="_blank" rel="noopener" class="file-link">
+      {% if f.is_image %}<img src="{% url 'attachment' f.pk %}" alt="" loading="lazy" class="file-thumb">{% else %}<span class="file-icon">{{ f.name|slice:"-4:"|upper|cut:"." }}</span>{% endif %}
+      <span class="file-name">{{ f.name }}</span>
+    </a>
+    {% if removable %}
+    <label class="file-remove"><input type="checkbox" name="remove_file" value="{{ f.pk }}"> Xóa</label>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>

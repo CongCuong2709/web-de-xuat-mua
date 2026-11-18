@@ -1,5 +1,6 @@
+from . import payments as pm
 from . import workflow as wf
-from .models import Proposal
+from .models import PaymentRequest, Proposal
 
 
 def nav(request):
@@ -7,6 +8,8 @@ def nav(request):
     if not user or not user.is_authenticated or user.must_change_password:
         return {}
     return {
-        "pending_count": Proposal.objects.filter(wf.pending_q(user)).count(),
+        "pending_count": Proposal.objects.filter(wf.pending_q(user)).count()
+        + PaymentRequest.objects.filter(pm.pending_q(user)).count(),
         "can_create": wf.can_create(user),
+        "can_see_money": pm.can_see_money_pages(user),
     }

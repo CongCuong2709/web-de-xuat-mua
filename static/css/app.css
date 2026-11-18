@@ -132,6 +132,7 @@ textarea { resize: vertical; }
 .pill-wait { background: var(--wait-bg); color: var(--wait-fg); }
 .pill-done { background: var(--done-bg); color: var(--done-fg); }
 .pill-back { background: var(--back-bg); color: var(--back-fg); }
+.pill-money { background: #E8EEFC; color: var(--accent); }
 .pill-muted { background: #ECEEF2; color: var(--muted); }
 .pill-role { background: var(--accent-soft); color: var(--accent); }
 
@@ -184,6 +185,8 @@ textarea { resize: vertical; }
 
 /* ---------- Chi tiết ---------- */
 .detail-head h2 { margin-top: 8px; }
+.kind-label { margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--accent); }
+.kind-label + h2 { margin-top: 2px; }
 .detail-amount { font-size: 26px; font-weight: 700; margin-top: 4px; }
 .items { list-style: none; margin: 0; padding: 0; }
 .items li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
@@ -206,12 +209,15 @@ textarea { resize: vertical; }
 .tl-note { margin-top: 4px; font-size: 14px; color: var(--muted); font-style: italic; }
 
 .actionbar {
-  position: sticky; bottom: 0; z-index: 5; display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap;
+  position: sticky; bottom: 0; z-index: 5; display: flex; gap: 8px; align-items: flex-end;
   margin: 12px -16px -24px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
   background: var(--bg); border-top: 1px solid var(--line);
 }
 .actionbar form { margin: 0; }
 .note-input { margin-bottom: 8px; }
+.link-btn { display: block; margin: 0 0 6px auto; padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-size: 13px; cursor: pointer; }
+.actionbar { flex-wrap: nowrap; }
+.actionbar:has(a.btn + a.btn) { flex-direction: column; align-items: stretch; }
 .split-pane .actionbar { background: var(--surface); margin: 12px 0 0; border-radius: var(--radius); border: 1px solid var(--line); }
 
 .sheet-backdrop {
@@ -226,6 +232,35 @@ textarea { resize: vertical; }
   .sheet-backdrop { align-items: center; }
   .sheet { border-radius: 16px; }
 }
+
+/* ---------- File đính kèm ---------- */
+.mt { margin-top: 12px; }
+.files { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.files li { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.file-link { display: flex; align-items: center; gap: 10px; min-height: var(--tap); color: var(--text); text-decoration: none; min-width: 0; }
+.file-link:hover .file-name { color: var(--accent); text-decoration: underline; }
+.file-thumb { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); flex: 0 0 auto; }
+.file-icon {
+  width: 56px; height: 56px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 8px;
+  background: var(--accent-soft); color: var(--accent); font-size: 12px; font-weight: 700;
+}
+.file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.file-remove { font-size: 13px; color: var(--back-fg); white-space: nowrap; display: flex; gap: 4px; align-items: center; }
+input[type=file] { width: 100%; font: inherit; font-size: 14px; padding: 8px 0; }
+
+/* ---------- Phiếu tiền ---------- */
+.segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.segmented input { position: absolute; opacity: 0; pointer-events: none; }
+.segmented span {
+  display: flex; flex-direction: column; gap: 2px; height: 100%; padding: 12px; border: 1px solid var(--line);
+  border-radius: 10px; cursor: pointer;
+}
+.segmented small { color: var(--muted); font-size: 12px; }
+.segmented input:checked + span { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); background: var(--accent-soft); }
+.segmented input:focus-visible + span { outline: 2px solid var(--accent); }
+.input-money { font-size: 20px !important; font-weight: 600; }
+.transfer-box { margin: 12px 0 16px; padding: 12px; border-radius: 10px; background: var(--bg); }
+.actionbar .btn { white-space: nowrap; }
 
 /* ---------- Form tạo / sửa ---------- */
 .narrow-form { max-width: 640px; }

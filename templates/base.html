@@ -26,6 +26,12 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>
       <span>Tất cả đơn</span>
     </a>
+    {% if can_see_money %}
+    <a href="{% url 'payment_list' %}" class="nav-link {% if here == 'payment_list' or here == 'payment_detail' %}is-active{% endif %}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18v10H3zM3 11h18M7 15h3"/></svg>
+      <span>Thanh toán</span>
+    </a>
+    {% endif %}
     {% if can_create %}
     <a href="{% url 'proposal_create' %}" class="nav-link {% if here == 'proposal_create' %}is-active{% endif %}">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>

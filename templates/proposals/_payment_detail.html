@@ -1,0 +1,89 @@
+{% load money %}
+<article class="detail">
+  <div class="card detail-head">
+    <div class="pcard-row"><span class="code">{{ pay.code }}</span><span class="pill {{ pay.pill_class }}">{{ pay.get_status_display }}</span></div>
+    <div class="kind-label">{{ pay.get_kind_display }}</div>
+    <h2>{{ p.title }}</h2>
+    <div class="detail-amount">{{ pay.amount|vnd }} đ</div>
+    {% if pay.is_advance and pay.spent is not None %}
+    <div class="hint">
+      Thực chi {{ pay.spent|vnd }} đ ·
+      {% if pay.difference > 0 %}thu mua còn giữ thừa {{ pay.difference|vnd }} đ
+      {% elif pay.difference < 0 %}công ty còn thiếu thu mua {{ pay.shortfall|vnd }} đ
+      {% else %}khớp tạm ứng{% endif %}
+    </div>
+    {% endif %}
+    <dl class="kv">
+      <dt>Đề xuất</dt><dd><a href="{% url 'proposal_detail' p.code %}">{{ p.code }}</a> · {{ p.total|vnd }} đ</dd>
+      <dt>Thu mua</dt><dd>{{ pay.requester }}</dd>
+      <dt>Nhận tiền vào</dt><dd>{{ pay.bank_account_number }} · {{ pay.bank_name }}<br><span class="muted">{{ pay.bank_account_holder }}</span></dd>
+      <dt>Đang chờ</dt><dd>{{ pay.waiting_on }}</dd>
+    </dl>
+  </div>
+
+  {% if pay.note %}
+  <div class="card"><h3 class="card-title">Ghi chú</h3><p class="prewrap">{{ pay.note }}</p></div>
+  {% endif %}
+
+  <div class="card">
+    <h3 class="card-title">Hóa đơn, chứng từ · {{ files|length }}</h3>
+    {% if files %}{% include "proposals/_files.html" %}{% else %}<p class="muted small">Chưa có.</p>{% endif %}
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Tiến trình</h3>
+    {% include "proposals/_timeline.html" %}
+  </div>
+
+  {% if actions %}
+  <div class="actionbar" x-data="{ sheet: '' }">
+    {% if "approve" in actions %}
+      <button type="button" class="btn btn-danger" @click="sheet = 'return'">Trả về</button>
+      <form method="post" action="{% url 'payment_act' pay.code %}" class="grow" x-data="{ note: false }">
+        {% csrf_token %}<input type="hidden" name="action" value="approve">
+        <input x-show="note" x-cloak name="note" class="input note-input" placeholder="Ghi chú khi duyệt (không bắt buộc)">
+        <button type="button" class="link-btn" x-show="!note" @click="note = true">+ Thêm ghi chú khi duyệt</button>
+        <div class="row">
+          <button class="btn btn-primary grow">
+            {% if pay.status == "cho_ct_tam_ung" %}Duyệt tạm ứng{% elif pay.status == "cho_ct_hoan_ung" %}Duyệt hoàn ứng{% elif pay.status == "cho_ct_chi" %}Duyệt và hoàn tiền{% else %}Duyệt chi{% endif %}
+          </button>
+        </div>
+      </form>
+      {% url 'payment_act' pay.code as action_url %}
+      {% with recipient=pay.requester %}{% include "proposals/_return_sheet.html" %}{% endwith %}
+    {% endif %}
+    {% if "transfer" in actions %}
+      <button type="button" class="btn btn-primary grow" @click="sheet = 'transfer'">Đã chuyển tiền</button>
+      <div class="sheet-backdrop" x-show="sheet === 'transfer'" x-cloak x-transition.opacity @click.self="sheet = ''">
+        <form method="post" action="{% url 'payment_act' pay.code %}" enctype="multipart/form-data" class="sheet">
+          {% csrf_token %}<input type="hidden" name="action" value="transfer">
+          <h3>Xác nhận đã chuyển tạm ứng</h3>
+          <div class="transfer-box">
+            <div class="detail-amount">{{ pay.amount|vnd }} đ</div>
+            <div>{{ pay.bank_account_number }} · {{ pay.bank_name }}</div>
+            <div class="muted">{{ pay.bank_account_holder }}</div>
+          </div>
+          <label class="field"><span>Ủy nhiệm chi / ảnh chuyển khoản (không bắt buộc)</span><input type="file" name="files" multiple accept="image/*,.pdf"></label>
+          <label class="field"><span>Ghi chú</span><input name="note" class="input"></label>
+          <div class="row">
+            <button type="button" class="btn" @click="sheet = ''">Thôi</button>
+            <button class="btn btn-primary grow">Xác nhận đã chuyển</button>
+          </div>
+        </form>
+      </div>
+    {% endif %}
+    {% if "settle" in actions %}
+      <a class="btn btn-primary grow" href="{% url 'payment_settle' pay.code %}">Đã mua xong, đề nghị hoàn ứng</a>
+    {% endif %}
+    {% if "edit" in actions %}
+      <a class="btn btn-primary grow" href="{% url 'payment_edit' pay.code %}">Sửa và gửi lại</a>
+    {% endif %}
+    {% if "cancel" in actions %}
+      <form method="post" action="{% url 'payment_act' pay.code %}" onsubmit="return confirm('Hủy phiếu {{ pay.code }}? Sau đó có thể lập phiếu mới.')">
+        {% csrf_token %}<input type="hidden" name="action" value="cancel">
+        <button class="btn btn-danger">Hủy phiếu</button>
+      </form>
+    {% endif %}
+  </div>
+  {% endif %}
+</article>

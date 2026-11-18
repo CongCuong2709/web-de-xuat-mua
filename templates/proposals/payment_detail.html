@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ pay.code }} · Đề xuất mua sắm{% endblock %}
+{% block bodyclass %}no-tabbar{% endblock %}
+{% block content %}
+<header class="topbar">
+  <a href="javascript:history.length > 1 ? history.back() : location.assign('{% url 'home' %}')" class="back" aria-label="Quay lại">←</a>
+  <span>{% if pay.is_advance %}Phiếu tạm ứng{% else %}Phiếu thanh toán{% endif %}</span>
+</header>
+{% include "proposals/_payment_detail.html" %}
+{% endblock %}

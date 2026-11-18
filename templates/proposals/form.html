@@ -18,7 +18,7 @@
   {% for e in errors %}<div class="flash flash-error">{{ e }}</div>{% endfor %}
 
   {{ data.raw_items|json_script:"items-data" }}
-  <form method="post" x-data="proposalForm({{ threshold }})" class="stack">
+  <form method="post" enctype="multipart/form-data" x-data="proposalForm({{ threshold }})" class="stack">
     {% csrf_token %}
     <div class="card">
       <label class="field"><span>Cần mua gì? <b class="req">*</b></span>
@@ -27,6 +27,10 @@
       <label class="field"><span>Lý do, mục đích <b class="req">*</b></span>
         <textarea name="reason" rows="3" required placeholder="Ví dụ: Máy cũ dùng 6 năm, thường treo khi mở file lớn">{{ data.reason }}</textarea>
       </label>
+      <label class="field"><span>Ảnh minh chứng, báo giá <small class="muted">(không bắt buộc)</small></span>
+        <input type="file" name="files" multiple accept="{{ accept }}">
+      </label>
+      {% if files %}{% with removable=True %}{% include "proposals/_files.html" %}{% endwith %}{% endif %}
     </div>
 
     <div class="card">
