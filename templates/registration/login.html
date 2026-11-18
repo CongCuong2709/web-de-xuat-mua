@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Đăng nhập · Đề xuất mua sắm{% endblock %}
+{% block body %}
+<div class="auth">
+  <form method="post" class="card auth-card">
+    {% csrf_token %}
+    <h1 class="auth-title">Đề xuất mua sắm</h1>
+    <p class="muted">Đăng nhập bằng tài khoản quản trị viên cấp.</p>
+    {% if form.errors %}<div class="flash flash-error">Sai tên đăng nhập hoặc mật khẩu.</div>{% endif %}
+    <label class="field"><span>Tên đăng nhập</span>
+      <input name="username" autocomplete="username" autocapitalize="none" required autofocus value="{{ form.username.value|default:'' }}">
+    </label>
+    <label class="field"><span>Mật khẩu</span>
+      <input name="password" type="password" autocomplete="current-password" required>
+    </label>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button class="btn btn-primary btn-block">Đăng nhập</button>
+  </form>
+</div>
+{% endblock %}
