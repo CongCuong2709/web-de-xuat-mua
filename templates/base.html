@@ -19,7 +19,7 @@
     <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}is-active{% endif %}">Chờ tôi xử lý</a>
     <div class="nav-spacer"></div>
     <div class="nav-user">
-      <span class="nav-user-name">{{ user.display_name }}</span>
+      <a href="{% url 'profile' %}" class="nav-link nav-user-name {% if request.resolver_match.url_name == 'profile' %}is-active{% endif %}">{{ user.display_name }}</a>
       {% if user.is_staff %}<a href="{% url 'admin:index' %}" class="nav-link">Quản trị</a>{% endif %}
       <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="nav-link nav-logout">Đăng xuất</button></form>
     </div>

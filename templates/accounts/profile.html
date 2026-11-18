@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Tài khoản · Đề xuất mua sắm{% endblock %}
+{% block content %}
+<div class="narrow">
+  <header class="page-head"><h1>Tài khoản của tôi</h1></header>
+  <div class="card">
+    <dl class="kv">
+      <dt>Họ tên</dt><dd>{{ user.display_name }}</dd>
+      <dt>Tên đăng nhập</dt><dd>{{ user.username }}</dd>
+      <dt>Phòng ban</dt><dd>{{ user.department|default:"—" }}</dd>
+      <dt>Vai trò</dt><dd>{% for r in user.roles.all %}<span class="pill pill-role">{{ r.name }}</span> {% empty %}—{% endfor %}</dd>
+      <dt>Trưởng phòng trực tiếp</dt><dd>{{ user.manager|default:"—" }}</dd>
+      {% if user.bank_account_number %}
+      <dt>Tài khoản nhận tiền</dt><dd>{{ user.bank_account_number }} · {{ user.bank_name }}<br><span class="muted">{{ user.bank_account_holder }}</span></dd>
+      {% endif %}
+    </dl>
+    <p class="muted small">Thông tin sai? Báo quản trị viên để sửa.</p>
+    <a href="{% url 'password_change' %}" class="btn btn-block">Đổi mật khẩu</a>
+  </div>
+</div>
+{% endblock %}
