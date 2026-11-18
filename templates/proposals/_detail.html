@@ -1,0 +1,95 @@
+{% load money %}
+<article class="detail">
+  <div class="card detail-head">
+    <div class="pcard-row"><span class="code">{{ p.code }}</span><span class="pill {{ p.pill_class }}">{{ p.get_status_display }}</span></div>
+    <h2>{{ p.title }}</h2>
+    <div class="detail-amount">{{ p.total|vnd }} đ</div>
+    {% if p.needs_chairman %}<div class="hint">Từ {{ threshold|vnd }} đ: cần Chủ tịch duyệt sau Giám đốc</div>{% endif %}
+    <dl class="kv">
+      <dt>Người đề xuất</dt><dd>{{ p.creator }}{% if p.department %} · {{ p.department }}{% endif %}</dd>
+      <dt>Ngày tạo</dt><dd>{{ p.created_at|date:"d/m/Y H:i" }}</dd>
+      <dt>Đang chờ</dt><dd>{{ p.waiting_on }}</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Lý do</h3>
+    <p class="prewrap">{{ p.reason }}</p>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Danh sách món · {{ items|length }}</h3>
+    <ul class="items">
+      {% for it in items %}
+      <li>
+        <div><div class="item-name">{{ it.name }}</div><div class="muted small">× {{ it.quantity|qty }}{% if it.unit_price is not None %} · {{ it.unit_price|vnd }} đ{% endif %}</div></div>
+        <div class="item-total">{{ it.line_total|vnd }}</div>
+      </li>
+      {% endfor %}
+    </ul>
+    <div class="items-sum"><span>Tổng ước tính</span><strong>{{ p.total|vnd }} đ</strong></div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Tiến trình</h3>
+    <ol class="timeline">
+      {% for s in steps %}
+      <li class="tl tl-{{ s.state }}">
+        <span class="tl-dot"></span>
+        <div class="tl-body">
+          <div class="tl-title">{{ s.title }}</div>
+          <div class="muted small">{% if s.at %}{{ s.at|date:"d/m · H:i" }}{% else %}{{ s.meta }}{% endif %}</div>
+          {% if s.note %}<div class="tl-note">“{{ s.note }}”</div>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+  </div>
+
+  {% if actions %}
+  <div class="actionbar" x-data="{ sheet: false }">
+    {% if "approve" in actions %}
+      <button type="button" class="btn btn-danger" @click="sheet = true">Trả về</button>
+      <form method="post" action="{% url 'proposal_act' p.code %}" class="grow" x-data="{ note: false }">
+        {% csrf_token %}<input type="hidden" name="action" value="approve">
+        <input x-show="note" x-cloak name="note" class="input note-input" placeholder="Ghi chú khi duyệt (không bắt buộc)">
+        <div class="row">
+          <button class="btn btn-primary grow">Duyệt</button>
+          <button type="button" class="btn btn-ghost" x-show="!note" @click="note = true" title="Thêm ghi chú">+ Ghi chú</button>
+        </div>
+      </form>
+    {% endif %}
+    {% if "edit" in actions %}
+      <a class="btn btn-primary grow" href="{% url 'proposal_edit' p.code %}">Sửa và gửi lại</a>
+    {% endif %}
+    {% if "cancel" in actions %}
+      <form method="post" action="{% url 'proposal_act' p.code %}" onsubmit="return confirm('Hủy đề xuất {{ p.code }}? Không hoàn tác được.')">
+        {% csrf_token %}<input type="hidden" name="action" value="cancel">
+        <button class="btn btn-danger">Hủy đề xuất</button>
+      </form>
+    {% endif %}
+
+    {% if "return" in actions %}
+    <div class="sheet-backdrop" x-show="sheet" x-cloak x-transition.opacity @click.self="sheet = false" @keydown.escape.window="sheet = false">
+      <form method="post" action="{% url 'proposal_act' p.code %}" class="sheet" x-data="{ choice: '', note: '' }">
+        {% csrf_token %}<input type="hidden" name="action" value="return">
+        <h3>Trả về đề xuất</h3>
+        <p class="muted small">Đơn sẽ về lại {{ p.creator }} để sửa. Chọn lý do hoặc ghi lý do khác.</p>
+        <div class="chips">
+          {% for r in reasons %}
+          <label class="chip"><input type="radio" name="reason_choice" value="{{ r.text }}" x-model="choice" @click="if (choice === $el.value) { $nextTick(() => { choice = '' }) }"><span>{{ r.text }}</span></label>
+          {% endfor %}
+        </div>
+        <label class="field"><span>Ghi thêm</span>
+          <textarea name="note" rows="3" x-model="note" placeholder="Lý do khác, hoặc nói rõ cần sửa gì"></textarea>
+        </label>
+        <div class="row">
+          <button type="button" class="btn" @click="sheet = false">Thôi</button>
+          <button class="btn btn-danger-solid grow" :disabled="!choice && !note.trim()">Gửi trả về</button>
+        </div>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+</article>

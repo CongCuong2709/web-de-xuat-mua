@@ -9,19 +9,38 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'css/app.css' %}">
 <script src="{% static 'vendor/htmx.min.js' %}" defer></script>
+<script src="{% static 'js/app.js' %}" defer></script>
 <script src="{% static 'vendor/alpine.min.js' %}" defer></script>
 </head>
-<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+<body class="{% block bodyclass %}{% endblock %}" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 {% block body %}
+{% with here=request.resolver_match.url_name %}
 <div class="shell">
   <nav class="nav">
-    <div class="nav-brand">Đề xuất</div>
-    <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}is-active{% endif %}">Chờ tôi xử lý</a>
+    <a href="{% url 'home' %}" class="nav-brand">Đề xuất mua sắm</a>
+    <a href="{% url 'home' %}" class="nav-link {% if here == 'home' %}is-active{% endif %}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h4l2 3h4l2-3h4M4 13V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7M4 13v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>
+      <span>Chờ xử lý</span>{% if pending_count %}<b class="badge">{{ pending_count }}</b>{% endif %}
+    </a>
+    <a href="{% url 'proposal_list' %}" class="nav-link {% if here == 'proposal_list' or here == 'proposal_detail' %}is-active{% endif %}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>
+      <span>Tất cả đơn</span>
+    </a>
+    {% if can_create %}
+    <a href="{% url 'proposal_create' %}" class="nav-link {% if here == 'proposal_create' %}is-active{% endif %}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      <span>Tạo đề xuất</span>
+    </a>
+    {% endif %}
+    <a href="{% url 'profile' %}" class="nav-link {% if here == 'profile' or here == 'password_change' %}is-active{% endif %}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20a8 8 0 0 1 16 0"/></svg>
+      <span>Tài khoản</span>
+    </a>
     <div class="nav-spacer"></div>
     <div class="nav-user">
-      <a href="{% url 'profile' %}" class="nav-link nav-user-name {% if request.resolver_match.url_name == 'profile' %}is-active{% endif %}">{{ user.display_name }}</a>
-      {% if user.is_staff %}<a href="{% url 'admin:index' %}" class="nav-link">Quản trị</a>{% endif %}
-      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="nav-link nav-logout">Đăng xuất</button></form>
+      <div class="nav-user-name">{{ user.display_name }}</div>
+      {% if user.is_staff %}<a href="{% url 'admin:index' %}" class="nav-link nav-small">Quản trị</a>{% endif %}
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="nav-link nav-small">Đăng xuất</button></form>
     </div>
   </nav>
   <main class="main">
@@ -29,6 +48,7 @@
     {% block content %}{% endblock %}
   </main>
 </div>
+{% endwith %}
 {% endblock %}
 </body>
 </html>

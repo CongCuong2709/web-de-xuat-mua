@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load money humanize %}
+{% block title %}Chờ tôi xử lý · Đề xuất mua sắm{% endblock %}
+{% block content %}
+<div class="split">
+  <section class="split-list">
+    <header class="page-head">
+      <h1>Chờ tôi xử lý</h1>
+      <p class="muted">{% if items %}{{ items|length }} việc đang chờ bạn{% else %}Xin chào {{ user.display_name }}{% endif %}</p>
+    </header>
+    {% for p in items %}
+      {% with last=p.last_log %}
+      <a class="card pcard js-pane-link" href="{% url 'proposal_detail' p.code %}" data-pane-url="{% url 'proposal_detail' p.code %}?pane=1">
+        <div class="pcard-row"><span class="code">{{ p.code }}</span><span class="muted small">{{ p.updated_at|naturaltime }}</span></div>
+        <div class="pcard-title">{{ p.title }}</div>
+        <div class="pcard-row">
+          <span class="muted small">{{ p.creator }}{% if p.department %} · {{ p.department }}{% endif %}</span>
+          <span class="pcard-amount">{{ p.total|vnd }} đ</span>
+        </div>
+        <div class="pcard-row">
+          {% if p.status == "tra_ve" %}
+            <span class="pill pill-back">Bị trả về{% if last.note %}: {{ last.note|truncatechars:60 }}{% endif %}</span>
+          {% else %}
+            <span class="pill pill-wait">{{ p.get_status_display }}</span>
+            {% if last %}<span class="muted small">{{ last.short }}</span>{% endif %}
+          {% endif %}
+        </div>
+      </a>
+      {% endwith %}
+    {% empty %}
+      <div class="card empty">
+        <div class="empty-icon">✓</div>
+        <p><strong>Không có việc nào đang chờ bạn.</strong></p>
+        <p class="muted">Đề xuất cần bạn duyệt hoặc sửa sẽ hiện ở đây.</p>
+        {% if can_create %}<p><a class="btn btn-primary" href="{% url 'proposal_create' %}">Tạo đề xuất</a></p>{% endif %}
+      </div>
+    {% endfor %}
+  </section>
+  <section id="pane" class="split-pane">
+    <div class="pane-empty muted">Chọn một đề xuất bên trái để xem chi tiết.</div>
+  </section>
+</div>
+{% endblock %}

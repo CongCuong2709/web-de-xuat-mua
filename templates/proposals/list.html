@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Tất cả đề xuất · Đề xuất mua sắm{% endblock %}
+{% block content %}
+<header class="page-head"><h1>Tất cả đề xuất</h1></header>
+<form class="filters" method="get" action="{% url 'proposal_list' %}"
+      hx-get="{% url 'proposal_list' %}" hx-target="#results" hx-push-url="true"
+      hx-trigger="input changed delay:300ms from:input[name=q], change">
+  <input type="search" name="q" value="{{ q }}" class="input search" placeholder="Tìm theo mã, nội dung, người đề xuất" aria-label="Tìm kiếm">
+  <select name="phong" class="input" aria-label="Phòng ban">
+    <option value="">Mọi phòng ban</option>
+    {% for d in departments %}<option value="{{ d.pk }}" {% if dept == d.pk|stringformat:"d" %}selected{% endif %}>{{ d.name }}</option>{% endfor %}
+  </select>
+  <div class="chips chips-scroll">
+    {% for key, label in groups %}
+    <label class="chip"><input type="radio" name="nhom" value="{{ key }}" {% if group == key %}checked{% endif %}><span>{{ label }}</span></label>
+    {% endfor %}
+  </div>
+  <noscript><button class="btn">Lọc</button></noscript>
+</form>
+<div id="results">{% include "proposals/_table.html" %}</div>
+{% endblock %}

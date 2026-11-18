@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load money %}
+{% block title %}{% if p %}Sửa {{ p.code }}{% else %}Tạo đề xuất{% endif %} · Đề xuất mua sắm{% endblock %}
+{% block bodyclass %}no-tabbar{% endblock %}
+{% block content %}
+<header class="topbar">
+  <a href="{% if p %}{% url 'proposal_detail' p.code %}{% else %}{% url 'home' %}{% endif %}" class="back" aria-label="Quay lại">←</a>
+  <span>{% if p %}Sửa {{ p.code }}{% else %}Tạo đề xuất mua sắm{% endif %}</span>
+</header>
+
+<div class="narrow-form">
+  {% if returned %}
+  <div class="flash flash-error"><strong>{{ returned.step_name }} {{ returned.actor }} trả về:</strong> {{ returned.note }}</div>
+  {% endif %}
+  {% if not has_manager %}
+  <div class="flash flash-error">Bạn chưa có trưởng phòng trực tiếp nên chưa gửi được. Hãy báo quản trị viên.</div>
+  {% endif %}
+  {% for e in errors %}<div class="flash flash-error">{{ e }}</div>{% endfor %}
+
+  {{ data.raw_items|json_script:"items-data" }}
+  <form method="post" x-data="proposalForm({{ threshold }})" class="stack">
+    {% csrf_token %}
+    <div class="card">
+      <label class="field"><span>Cần mua gì? <b class="req">*</b></span>
+        <input name="title" class="input" value="{{ data.title }}" maxlength="200" required placeholder="Ví dụ: Laptop cho phòng Kế toán">
+      </label>
+      <label class="field"><span>Lý do, mục đích <b class="req">*</b></span>
+        <textarea name="reason" rows="3" required placeholder="Ví dụ: Máy cũ dùng 6 năm, thường treo khi mở file lớn">{{ data.reason }}</textarea>
+      </label>
+    </div>
+
+    <div class="card">
+      <h3 class="card-title">Danh sách món</h3>
+      <template x-for="(it, i) in items" :key="it.key">
+        <div class="item-edit">
+          <div class="row">
+            <input name="item_name" class="input grow" x-model="it.name" placeholder="Tên món" maxlength="200" :aria-label="'Tên món ' + (i + 1)">
+            <button type="button" class="btn btn-ghost btn-icon" @click="remove(i)" x-show="items.length > 1" aria-label="Xóa món">✕</button>
+          </div>
+          <div class="row">
+            <div class="stepper">
+              <button type="button" @click="step(it, -1)" aria-label="Bớt">−</button>
+              <input name="item_qty" x-model="it.qty" inputmode="decimal" aria-label="Số lượng">
+              <button type="button" @click="step(it, 1)" aria-label="Thêm">+</button>
+            </div>
+            <input name="item_price" class="input grow" x-model="it.price" inputmode="numeric" placeholder="Đơn giá ước tính (đ)" aria-label="Đơn giá ước tính">
+          </div>
+          <div class="muted small right" x-show="line(it) > 0" x-text="'= ' + fmt(line(it)) + ' đ'"></div>
+        </div>
+      </template>
+      <button type="button" class="btn btn-block btn-dashed" @click="add()">+ Thêm món</button>
+      <p class="muted small">Đơn giá là ước tính, không bắt buộc.</p>
+    </div>
+
+    <div class="card summary">
+      <div class="items-sum"><span>Tổng ước tính</span><strong x-text="fmt(total) + ' đ'"></strong></div>
+      <div class="route" :class="total >= threshold ? 'route-high' : ''"
+           x-text="total >= threshold ? 'Từ ' + fmt(threshold) + ' đ: Trưởng phòng → Giám đốc → Chủ tịch' : 'Dưới ' + fmt(threshold) + ' đ: Trưởng phòng → Giám đốc'"></div>
+    </div>
+
+    <div class="submitbar">
+      <button class="btn btn-primary btn-block" {% if not has_manager %}disabled{% endif %}>{% if p %}Gửi lại trưởng phòng duyệt{% else %}Gửi trưởng phòng duyệt{% endif %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

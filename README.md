@@ -35,6 +35,13 @@ $env:DEBUG="1"; .\.venv\Scripts\python.exe manage.py tao_du_lieu_mau
 - **Quản trị viên** = tick *Trạng thái superuser*.
 - **Mốc Chủ tịch duyệt** và **Lý do trả về**: mục *Cấu hình*.
 
+## Luồng đề xuất (Chặng 2)
+
+Nhân viên tạo → Trưởng phòng trực tiếp → Giám đốc (1 trong 2) → Chủ tịch (nếu tổng ≥ mốc) → Đã duyệt, chờ thu mua.
+Bước nào cũng trả về được (bắt buộc lý do), đơn về người tạo sửa và gửi lại từ đầu, không giới hạn số lần.
+Người tạo được hủy khi đơn bị trả về hoặc trưởng phòng chưa xử lý.
+Luật nằm trong `proposals/workflow.py`; đổi luật thì sửa ở đó và test trong `tests/test_workflow.py`.
+
 ## Cấu hình theo máy
 
 Tạo file `.env` ở thư mục gốc (không đưa lên git):
@@ -56,6 +63,7 @@ Sao lưu = chép cả thư mục `data/`.
 config/      cấu hình Django, urls
 accounts/    người dùng, phòng ban, vai trò, đăng nhập, đổi mật khẩu
 core/        cấu hình chung (mốc tiền), lý do trả về
+proposals/   đề xuất, món, lịch sử duyệt; workflow.py = luật duyệt (một chỗ duy nhất)
 templates/   giao diện
 static/      CSS, htmx, alpine (không cần Node)
 tests/       pytest
