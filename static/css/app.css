@@ -185,6 +185,8 @@ textarea { resize: vertical; }
 
 /* ---------- Chi tiết ---------- */
 .detail-head h2 { margin-top: 8px; }
+.print-links { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 14px; }
+.print-links a { display: inline-flex; align-items: center; min-height: 32px; font-weight: 600; }
 .kind-label { margin-top: 6px; font-size: 13px; font-weight: 600; color: var(--accent); }
 .kind-label + h2 { margin-top: 2px; }
 .detail-amount { font-size: 26px; font-weight: 700; margin-top: 4px; }

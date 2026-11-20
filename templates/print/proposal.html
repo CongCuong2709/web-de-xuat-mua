@@ -1,0 +1,45 @@
+{% extends "print/base.html" %}
+{% load money %}
+{% block title %}Tờ trình {{ p.code }}{% endblock %}
+{% block document %}
+<div class="ten-loai">Tờ trình</div>
+<div class="trich-yeu-wrap"><div class="trich-yeu">Về việc mua sắm {{ p.title|lowerfirst }}</div></div>
+
+<div class="kinh-gui">
+  <table><tr>
+    <td>Kính gửi:</td>
+    <td>{% if p.needs_chairman %}- Ban Giám đốc;<br>- Chủ tịch.{% else %}Ban Giám đốc.{% endif %}</td>
+  </tr></table>
+</div>
+
+<div class="noi-dung">
+  <p>{{ dept }} kính trình {% if p.needs_chairman %}Ban Giám đốc và Chủ tịch{% else %}Ban Giám đốc{% endif %} xem xét, phê duyệt việc mua sắm như sau:</p>
+  <p><strong>1. Lý do, mục đích:</strong> {{ p.reason|linebreaksbr }}</p>
+  <p><strong>2. Danh mục đề xuất:</strong></p>
+  <table class="bang">
+    <thead><tr><th style="width:9mm">STT</th><th>Tên hàng hóa</th><th style="width:18mm">Số lượng</th><th style="width:30mm">Đơn giá (đ)</th><th style="width:32mm">Thành tiền (đ)</th></tr></thead>
+    <tbody>
+      {% for it in items %}
+      <tr><td class="c">{{ forloop.counter }}</td><td>{{ it.name }}</td><td class="c">{{ it.quantity|qty }}</td>
+          <td class="r">{% if it.unit_price is not None %}{{ it.unit_price|vnd }}{% endif %}</td><td class="r">{% if it.line_total is not None %}{{ it.line_total|vnd }}{% endif %}</td></tr>
+      {% endfor %}
+    </tbody>
+    <tfoot><tr><td colspan="4" class="c">Tổng cộng</td><td class="r">{{ p.total|vnd }}</td></tr></tfoot>
+  </table>
+  <p><strong>3. Tổng kinh phí dự kiến:</strong> {{ p.total|vnd }} đồng <em>(Bằng chữ: {{ total_words }})</em>.</p>
+  <p>Kính trình {% if p.needs_chairman %}Ban Giám đốc và Chủ tịch{% else %}Ban Giám đốc{% endif %} xem xét, phê duyệt./.</p>
+</div>
+
+{% include "print/_signatures.html" %}
+
+<div class="noi-nhan">
+  <div class="lbl">Nơi nhận:</div>
+  <ul>
+    <li>- Như trên;</li>
+    <li>- Thu mua;</li>
+    <li>- Kế toán;</li>
+    <li>- Lưu: VT{% if p.department %}, {{ p.department }}{% endif %}.</li>
+  </ul>
+</div>
+{% endblock %}
+{% block status_line %}Trạng thái: {{ p.status_label }}.{% endblock %}

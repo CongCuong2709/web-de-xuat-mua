@@ -19,3 +19,12 @@ def qty(value):
     if value is None:
         return ""
     return f"{Decimal(value).normalize():f}".replace(".", ",")
+
+
+@register.filter
+def lowerfirst(value):
+    """'Laptop cho phòng KT' -> 'laptop cho phòng KT'; giữ nguyên chữ viết tắt như 'HP', 'USB'."""
+    s = str(value or "")
+    if len(s) > 1 and s[0].isupper() and s[1].islower():
+        return s[0].lower() + s[1:]
+    return s

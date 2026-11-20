@@ -19,6 +19,14 @@
       <dt>Nhận tiền vào</dt><dd>{{ pay.bank_account_number }} · {{ pay.bank_name }}<br><span class="muted">{{ pay.bank_account_holder }}</span></dd>
       <dt>Đang chờ</dt><dd>{{ pay.waiting_on }}</dd>
     </dl>
+    <div class="print-links">
+      {% if pay.is_advance %}
+        <a href="{% url 'payment_print' pay.code %}?loai=tam-ung" target="_blank" rel="noopener">In giấy đề nghị tạm ứng</a>
+        {% if pay.spent is not None %}<a href="{% url 'payment_print' pay.code %}" target="_blank" rel="noopener">In giấy thanh toán tạm ứng</a>{% endif %}
+      {% else %}
+        <a href="{% url 'payment_print' pay.code %}" target="_blank" rel="noopener">In giấy đề nghị thanh toán</a>
+      {% endif %}
+    </div>
   </div>
 
   {% if pay.note %}

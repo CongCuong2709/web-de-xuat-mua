@@ -1,0 +1,14 @@
+{# Hàng chữ ký. Duyệt trên hệ thống thì ghi thời điểm; chưa duyệt thì để trống chỗ ký tay. #}
+<table class="ky">
+  <tr>
+    {% for s in sigs %}
+    <td style="width: {% widthratio 100 sigs|length 1 %}%">
+      <div class="chuc-vu">{{ s.title }}</div>
+      <div class="xac-nhan">
+        {% if s.at %}(Đã {{ s.verb }} trên hệ thống<br>lúc {{ s.at|date:"H:i" }} ngày {{ s.at|date:"d/m/Y" }}){% if s.note %}<br>“{{ s.note }}”{% endif %}{% endif %}
+      </div>
+      <div class="ho-ten">{% if s.user %}{{ s.user.display_name }}{% endif %}</div>
+    </td>
+    {% endfor %}
+  </tr>
+</table>

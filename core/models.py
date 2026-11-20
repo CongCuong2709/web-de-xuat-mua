@@ -9,6 +9,19 @@ class AppSettings(models.Model):
         default=10_000_000,
         help_text="Đề xuất có tổng tiền từ mốc này trở lên cần Chủ tịch duyệt thêm sau Giám đốc.",
     )
+    # Dùng cho văn bản in theo Nghị định 30
+    org_parent = models.CharField(
+        "Cơ quan, tổ chức chủ quản", max_length=200, blank=True,
+        help_text="Dòng trên cùng góc trái văn bản in (nếu có). Ví dụ: TẬP ĐOÀN ABC. Để trống nếu không có.",
+    )
+    org_name = models.CharField(
+        "Tên công ty", max_length=200, blank=True,
+        help_text="Tên cơ quan ban hành trên văn bản in. Ví dụ: CÔNG TY TNHH ABC.",
+    )
+    place_name = models.CharField(
+        "Địa danh", max_length=100, blank=True,
+        help_text="Dùng ở dòng ngày tháng văn bản in. Ví dụ: Hà Nội, TP. Hồ Chí Minh.",
+    )
 
     class Meta:
         verbose_name = "Cấu hình chung"

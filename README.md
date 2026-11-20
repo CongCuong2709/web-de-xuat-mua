@@ -56,6 +56,13 @@ Luật nằm trong `proposals/payments.py`, test trong `tests/test_payments.py`.
 File đính kèm (ảnh, PDF, Word, Excel; tối đa 15 MB/file, ảnh lớn tự thu nhỏ) lưu trong `data/media/`,
 chỉ tải được qua `/tep/<id>/` khi người xem có quyền xem đề xuất đó.
 
+## In văn bản (Nghị định 30)
+
+Trên trang chi tiết có link **In tờ trình (A4)** / **In giấy đề nghị tạm ứng / thanh toán**. Trang in mở tab mới, bấm **In / Lưu PDF**.
+Văn bản theo thể thức NĐ 30/2020/NĐ-CP: A4, Times New Roman, lề 20-15-20-30 mm, quốc hiệu, tiêu ngữ, số, địa danh ngày tháng,
+tên loại và trích yếu, chữ ký (ghi rõ đã duyệt trên hệ thống lúc nào), nơi nhận; số tiền đọc thành chữ.
+**Trước khi dùng**: quản trị viên vào *Cấu hình chung* điền **Tên công ty**, **Địa danh** (và cơ quan chủ quản nếu có).
+
 ## Cấu hình theo máy
 
 Tạo file `.env` ở thư mục gốc (không đưa lên git):

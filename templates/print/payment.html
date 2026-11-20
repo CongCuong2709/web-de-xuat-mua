@@ -1,0 +1,47 @@
+{% extends "print/base.html" %}
+{% load money %}
+{% block title %}{{ pay.code }}{% endblock %}
+{% block document %}
+<div class="ten-loai">
+  {% if settlement %}Giấy đề nghị thanh toán tạm ứng{% elif pay.is_advance %}Giấy đề nghị tạm ứng{% else %}Giấy đề nghị thanh toán{% endif %}
+</div>
+<div class="trich-yeu-wrap"><div class="trich-yeu">Về việc mua sắm {{ p.title|lowerfirst }}</div></div>
+
+<div class="kinh-gui">
+  <table><tr><td>Kính gửi:</td><td>- Chủ tịch;<br>- Kế toán.</td></tr></table>
+</div>
+
+<div class="noi-dung">
+  <p>Tên tôi là: <strong>{{ pay.requester.display_name }}</strong>. Bộ phận: Thu mua.</p>
+  {% if settlement %}
+    <p>Đề nghị thanh toán khoản tạm ứng {{ pay.code }} để mua sắm theo đề xuất {{ p.code }} đã được phê duyệt, cụ thể:</p>
+    <table class="bang">
+      <tbody>
+        <tr><td>1. Số tiền đã tạm ứng</td><td class="r">{{ pay.amount|vnd }} đ</td></tr>
+        <tr><td>2. Số tiền thực chi</td><td class="r">{{ pay.spent|vnd }} đ</td></tr>
+        <tr><td>3. Chênh lệch {% if pay.difference > 0 %}(thu mua hoàn lại){% elif pay.difference < 0 %}(công ty chi thêm cho thu mua){% endif %}</td>
+            <td class="r">{% if pay.difference > 0 %}{{ pay.difference|vnd }}{% else %}{{ pay.shortfall|vnd }}{% endif %} đ</td></tr>
+      </tbody>
+    </table>
+    <p>Số tiền thực chi bằng chữ: <em>{{ amount_words }}</em>.</p>
+  {% else %}
+    <p>Đề nghị {% if pay.is_advance %}tạm ứng{% else %}thanh toán (đã tự ứng tiền mua){% endif %} số tiền: <strong>{{ amount|vnd }} đồng</strong> <em>(Bằng chữ: {{ amount_words }})</em>.</p>
+    <p>Lý do: {% if pay.is_advance %}tạm ứng để mua sắm{% else %}hoàn tiền đã mua sắm{% endif %} theo đề xuất {{ p.code }} - {{ p.title }}, tổng dự kiến {{ p.total|vnd }} đồng, đã được phê duyệt.</p>
+  {% endif %}
+  {% if pay.note %}<p>Ghi chú: {{ pay.note|linebreaksbr }}</p>{% endif %}
+  <p>Hình thức nhận tiền: chuyển khoản vào tài khoản số <strong>{{ pay.bank_account_number }}</strong> tại {{ pay.bank_name }}, chủ tài khoản {{ pay.bank_account_holder }}.</p>
+  {% if files %}<p>Chứng từ kèm theo: {{ files|length }} file ({% for f in files %}{{ f.name }}{% if not forloop.last %}; {% endif %}{% endfor %}).</p>{% endif %}
+  <p>Kính đề nghị Chủ tịch xem xét, phê duyệt./.</p>
+</div>
+
+{% include "print/_signatures.html" %}
+
+<div class="noi-nhan">
+  <div class="lbl">Nơi nhận:</div>
+  <ul>
+    <li>- Như trên;</li>
+    <li>- Lưu: VT, KT, Thu mua.</li>
+  </ul>
+</div>
+{% endblock %}
+{% block status_line %}Trạng thái phiếu: {{ pay.get_status_display }}.{% endblock %}

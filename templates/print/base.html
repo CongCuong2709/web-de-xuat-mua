@@ -1,0 +1,126 @@
+{% load static %}<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+{# Màn hình hẹp (điện thoại) vẫn thấy trọn trang A4, thu nhỏ lại #}
+<meta name="viewport" content="width=880">
+<meta name="format-detection" content="telephone=no">
+<title>{% block title %}Văn bản in{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+{# Tinos: phông cùng kích thước Times New Roman, dùng khi máy không có Times New Roman (điện thoại) #}
+<link href="https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+<style>
+/* Thể thức Nghị định 30/2020/NĐ-CP, Phụ lục I:
+   khổ A4; lề trên 20-25mm, dưới 20-25mm, trái 30-35mm, phải 15-20mm; phông Times New Roman;
+   số trang ở giữa lề trên, không đánh số trang đầu. */
+@page {
+  size: A4;
+  margin: 20mm 15mm 20mm 30mm;
+  @top-center { content: counter(page); font: 13pt "Times New Roman", Tinos, serif; }
+}
+@page :first { @top-center { content: none; } }
+
+:root { --ink: #000; }
+* { box-sizing: border-box; }
+html { background: #E9EBEF; }
+body {
+  margin: 0; color: var(--ink);
+  font-family: "Times New Roman", Tinos, serif; font-size: 14pt; line-height: 1.3;
+}
+.sheet {
+  width: 210mm; min-height: 297mm; margin: 16px auto 40px; background: #fff;
+  padding: 20mm 15mm 20mm 30mm; box-shadow: 0 1px 6px rgba(0,0,0,.15);
+}
+.toolbar {
+  position: sticky; top: 0; z-index: 2; display: flex; gap: 12px; align-items: center; justify-content: center;
+  padding: 10px; background: #15171C; color: #fff; font: 15px/1.4 system-ui, "Segoe UI", sans-serif;
+}
+.toolbar a, .toolbar button {
+  display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border-radius: 8px; border: 0;
+  font: inherit; font-weight: 600; cursor: pointer; text-decoration: none;
+}
+.toolbar a { color: #fff; background: #3A3F4B; }
+.toolbar button { color: #fff; background: #1F4FD1; }
+.warn { max-width: 210mm; margin: 12px auto 0; padding: 10px 14px; border-radius: 8px; background: #FFF1D6; color: #8A4B00;
+        font: 14px/1.4 system-ui, "Segoe UI", sans-serif; }
+
+@media print {
+  html, body { background: #fff; }
+  .sheet { width: auto; min-height: 0; margin: 0; padding: 0; box-shadow: none; }
+  .toolbar, .warn { display: none; }
+}
+
+/* Phần đầu: ô 1 (cơ quan) bên trái, ô 2 (quốc hiệu, tiêu ngữ) bên phải */
+.head { width: 100%; border-collapse: collapse; }
+.head td { vertical-align: top; text-align: center; padding: 0; }
+.head .left { width: 40%; }
+.head .right { width: 60%; }
+.org-parent { font-size: 13pt; text-transform: uppercase; }
+.org-name { display: inline-block; font-size: 13pt; font-weight: 700; text-transform: uppercase; }
+.org-name::after, .trich-yeu::after { content: ""; display: block; width: 40%; margin: 2px auto 0; border-top: 1px solid var(--ink); }
+.so { font-size: 13pt; margin-top: 6pt; }
+.quoc-hieu { font-size: 13pt; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
+.tieu-ngu { display: inline-block; font-size: 14pt; font-weight: 700; border-bottom: 1px solid var(--ink); padding-bottom: 1px; }
+.dia-danh { font-size: 14pt; font-style: italic; margin-top: 6pt; }
+
+/* Tên loại, trích yếu */
+.ten-loai { margin-top: 24pt; text-align: center; font-size: 14pt; font-weight: 700; text-transform: uppercase; }
+.trich-yeu-wrap { text-align: center; }
+.trich-yeu { display: inline-block; font-size: 14pt; font-weight: 700; }
+.kinh-gui { margin: 12pt 0 6pt; text-align: center; }
+.kinh-gui table { margin: 0 auto; border-collapse: collapse; }
+.kinh-gui td { padding: 0 4pt; vertical-align: top; text-align: left; }
+
+/* Nội dung: căn đều, lùi đầu dòng 1cm, cách đoạn 6pt */
+.noi-dung p { margin: 0 0 6pt; text-align: justify; text-indent: 1cm; }
+.bang { width: 100%; border-collapse: collapse; margin: 6pt 0 8pt; font-size: 13pt; }
+.bang th, .bang td { border: 1px solid var(--ink); padding: 3pt 5pt; vertical-align: top; }
+.bang th { font-weight: 700; text-align: center; }
+.bang .c { text-align: center; } .bang .r { text-align: right; white-space: nowrap; }
+.bang tfoot td { font-weight: 700; }
+
+/* Chữ ký: chức vụ in hoa đậm, họ tên in thường đậm */
+.ky { width: 100%; border-collapse: collapse; margin-top: 18pt; page-break-inside: avoid; }
+.ky td { vertical-align: top; text-align: center; padding: 0 4pt; font-size: 13pt; }
+.ky .chuc-vu { font-weight: 700; text-transform: uppercase; }
+.ky .xac-nhan { min-height: 22mm; padding-top: 4pt; font-size: 11pt; font-style: italic; }
+.ky .ho-ten { font-weight: 700; }
+
+/* Nơi nhận: "Nơi nhận:" 12pt nghiêng đậm; danh sách 11pt */
+.noi-nhan { margin-top: 18pt; page-break-inside: avoid; }
+.noi-nhan .lbl { font-size: 12pt; font-style: italic; font-weight: 700; }
+.noi-nhan ul { list-style: none; margin: 0; padding: 0; font-size: 11pt; }
+.in-luc { margin-top: 14pt; font-size: 10pt; font-style: italic; color: #333; }
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <a href="{{ back_url }}">← Quay lại</a>
+  <button type="button" onclick="window.print()">In / Lưu PDF</button>
+</div>
+{% if missing_org %}
+<div class="warn">Chưa khai báo tên công ty hoặc địa danh. Quản trị viên vào <strong>Quản trị → Cấu hình chung</strong> để điền, văn bản sẽ hiện đúng.</div>
+{% endif %}
+{% if not final %}
+<div class="warn">Văn bản chưa được duyệt xong. Bản in sẽ ghi rõ trạng thái hiện tại ở cuối trang.</div>
+{% endif %}
+<main class="sheet">
+  <table class="head">
+    <tr>
+      <td class="left">
+        {% if cfg.org_parent %}<div class="org-parent">{{ cfg.org_parent }}</div>{% endif %}
+        <div class="org-name">{{ cfg.org_name|default:"TÊN CÔNG TY" }}</div>
+        <div class="so">Số: {{ number }}</div>
+      </td>
+      <td class="right">
+        <div class="quoc-hieu">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+        <div class="tieu-ngu">Độc lập - Tự do - Hạnh phúc</div>
+        <div class="dia-danh">{{ cfg.place_name|default:"............" }}, {{ date_line }}</div>
+      </td>
+    </tr>
+  </table>
+  {% block document %}{% endblock %}
+  <div class="in-luc">In từ hệ thống lúc {{ printed_at|date:"H:i d/m/Y" }}. {% block status_line %}{% endblock %}</div>
+</main>
+</body>
+</html>

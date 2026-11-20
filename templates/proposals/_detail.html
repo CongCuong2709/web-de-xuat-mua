@@ -10,6 +10,7 @@
       <dt>Ngày tạo</dt><dd>{{ p.created_at|date:"d/m/Y H:i" }}</dd>
       <dt>Đang chờ</dt><dd>{{ p.waiting_on }}</dd>
     </dl>
+    <div class="print-links"><a href="{% url 'proposal_print' p.code %}" target="_blank" rel="noopener">In tờ trình (A4)</a></div>
   </div>
 
   <div class="card">

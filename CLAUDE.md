@@ -10,7 +10,7 @@ Sources of truth:
 - **As-is doc:** https://claude.ai/artifact/2Xo6gEJGM3iJdvxzb1uX2T. This holds the business rules. Its "Quyết định cho bản viết lại" section lists what is in scope and what is deferred ("Để sau").
 - **Old spec:** https://claude.ai/artifact/8A6xbF4srM7dEAViJrbFkP. Use it only as a feature catalog.
 
-Do not add features the as-is doc defers, such as notifications, print templates, khảo giá or multi-supplier quotes.
+Do not add features the as-is doc defers, such as notifications, khảo giá or multi-supplier quotes. (A4 printing per Nghị định 30 was moved into scope on 2026-11-20.)
 
 Deployment:
 - Runs on a single always-on Windows machine at `127.0.0.1:8100`.
@@ -53,7 +53,7 @@ The UI and all user-facing strings are in Vietnamese. Code identifiers are in En
   - `Role` rows are fixed and seeded by migration `0002_seed_roles`. They are read-only in the admin, because approval rules depend on the role codes. Check roles with `user.has_role(Role.X, ...)`.
   - `ForcePasswordChangeMiddleware` locks a user onto `/doi-mat-khau/` until they change their password.
   - Only admins create accounts. Admin create and password reset set `must_change_password`. Note that `UserAdmin.save_model` makes `is_staff` mirror `is_superuser`.
-- `core`: `AppSettings` singleton (`AppSettings.load()`, pk=1) holding `chairman_threshold` (default 10,000,000 đ), and `ReturnReason` (the quick-pick reasons for returning a proposal). Both are editable in the admin and seeded by migration.
+- `core`: `AppSettings` singleton (`AppSettings.load()`, pk=1) holding `chairman_threshold` (default 10,000,000 đ), the print header fields `org_parent` / `org_name` / `place_name`, and `ReturnReason` (the quick-pick reasons for returning a proposal). Both are editable in the admin and seeded by migration.
 - `proposals`: `Proposal`, `ProposalItem`, `PaymentRequest`, `Attachment` and `ApprovalLog`.
   - `ApprovalLog` rows for money steps carry both `proposal` and `payment`, so the proposal timeline also shows the money history.
   - Every `Attachment` belongs to a proposal (and optionally a payment). It is downloadable only through `views.attachment` (`/tep/<id>/`), which checks `visible_proposals`. There is no public media URL. Upload validation and image downscaling live in `proposals/attachments.py`.
@@ -96,6 +96,22 @@ Other rules:
 - **Thanh toán tự ứng (TT):** an invoice is mandatory → kế toán approves → chủ tịch approves and refunds → `hoan_tat`.
 - Money always goes to thu mua. The bank account is snapshotted from the user's profile, which users edit on `/tai-khoan/`. There is no direct-to-supplier payment.
 - Over/under settlement (`difference` / `shortfall`) is shown on screen only. Multi-installment payment and detailed settlement are deferred.
+
+**Printing (Nghị định 30/2020/NĐ-CP)**
+- Print pages are plain HTML with print CSS. The user clicks "In / Lưu PDF" (`window.print()`). There is no PDF library.
+- Views are in `proposals/views_print.py`:
+  - `/de-xuat/<code>/in/` prints the tờ trình.
+  - `/tien/<code>/in/` prints the payment document. For a tạm ứng that has `spent`, it prints the settlement document; `?loai=tam-ung` forces the original advance request.
+- `templates/print/base.html` holds the ND30 layout and must stay compliant:
+  - A4; margins 20/15/20/30 mm (top/right/bottom/left); Times New Roman, falling back to Tinos.
+  - The page number sits in the top margin and is not printed on page 1.
+  - Header: ô 1 on the left (organisation, `Số:`) and ô 2 on the right (quốc hiệu, tiêu ngữ, địa danh + date).
+  - Below that: tên loại + trích yếu, Kính gửi, the content, then signatures and Nơi nhận.
+- `proposals/printing.py` provides:
+  - `so_thanh_chu`: the amount in Vietnamese words.
+  - `ngay_thang`: the ND30 date, padding the day when it is below 10 and the month when it is 1 or 2.
+  - The signature blocks, built from `ApprovalLog`. Only approvals after the latest submit or resubmit count.
+- Every print view checks permissions, just like the detail pages.
 
 **Frontend**
 - Django templates plus HTMX and Alpine. Both libraries are vendored in `static/vendor/`; there is no Node.
