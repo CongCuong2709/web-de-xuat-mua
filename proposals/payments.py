@@ -234,7 +234,7 @@ def transfer(user, pay, note="", files=()):
 
 
 @transaction.atomic
-def settle(user, pay, spent, note="", files=()):
+def settle(user, pay, spent, note="", files=(), remove_ids=()):
     """Thu mua đã mua xong, đề nghị hoàn tạm ứng: ghi số thực chi, kèm hóa đơn nếu có."""
     pay = _reload(pay)
     if SETTLE not in actions_for(user, pay):
@@ -244,6 +244,7 @@ def settle(user, pay, spent, note="", files=()):
     before = pay.status
     pay.spent = spent
     pay.save(update_fields=["spent"])
+    attachments.remove(remove_ids, pay.proposal, pay, uploaded_by=user)
     if files:
         attachments.save(files, user, pay.proposal, pay)
     _move(pay, PS.CHO_DUYET_HOAN_UNG)

@@ -15,7 +15,7 @@
   {% for e in errors %}<div class="flash flash-error">{{ e }}</div>{% endfor %}
 
   <form method="post" enctype="multipart/form-data" class="stack"
-        x-data="{ kind: '{% if kind == 'thanh_toan' %}thanh-toan{% else %}tam-ung{% endif %}', files: 0 }">
+        x-data="{ kind: '{% if kind == 'thanh_toan' %}thanh-toan{% else %}tam-ung{% endif %}', files: 0, total: {{ p.total }}, amount: '{{ data.amount|escapejs }}', get n() { return Number(String(this.amount).replace(/[^\d]/g, '')) || 0 }, fmt(v) { return v.toLocaleString('vi-VN') } }">
     {% csrf_token %}
     <div class="card">
       <div class="muted small">Đề xuất đã duyệt</div>
@@ -36,8 +36,10 @@
 
     <div class="card">
       <label class="field"><span x-text="kind === 'tam-ung' ? 'Số tiền xin tạm ứng (đ)' : 'Số tiền đã chi, theo hóa đơn (đ)'">Số tiền (đ)</span>
-        <input name="amount" class="input input-money" value="{{ data.amount }}" inputmode="numeric" required>
+        <input name="amount" class="input input-money" x-model="amount" inputmode="numeric" required>
       </label>
+      <div class="route route-high" x-show="total > 0 && n > total" x-cloak
+           x-text="'Cao hơn dự toán đề xuất ' + fmt(n - total) + ' đ (dự toán: ' + fmt(total) + ' đ). Kiểm tra lại số 0 trước khi gửi.'"></div>
       <label class="field"><span>Ghi chú</span>
         <textarea name="note" rows="2" placeholder="Ví dụ: mua ở cửa hàng X, giao trong tuần">{{ data.note }}</textarea>
       </label>

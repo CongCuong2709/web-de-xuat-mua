@@ -111,8 +111,9 @@ def payment_settle(request, code):
         files = request.FILES.getlist("files")
         errors = attachments.validate(files)
         if not errors:
+            remove = [int(x) for x in request.POST.getlist("remove_file") if x.isdigit()]
             try:
-                pm.settle(request.user, pay, money(data["spent"]), data["note"], files)
+                pm.settle(request.user, pay, money(data["spent"]), data["note"], files, remove)
                 messages.success(request, f"Đã gửi đề nghị hoàn ứng {pay.code}.")
                 return redirect("home")
             except WorkflowError as e:
@@ -120,7 +121,9 @@ def payment_settle(request, code):
     returned = next((log for log in reversed(pay.logs.all())
                      if log.action == ApprovalLog.Action.RETURN and log.from_status == PS.CHO_DUYET_HOAN_UNG), None)
     return render(request, "proposals/payment_settle.html", {
-        "pay": pay, "data": data, "errors": errors, "returned": returned, "accept": attachments.ACCEPT,
+        "pay": pay, "data": data, "errors": errors, "returned": returned,
+        "files": list(pay.attachments.filter(uploaded_by=request.user)),
+        "accept": attachments.ACCEPT,
     })
 
 

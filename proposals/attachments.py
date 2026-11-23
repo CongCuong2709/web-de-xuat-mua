@@ -69,11 +69,13 @@ def save(files, user, proposal, payment=None):
     return saved
 
 
-def remove(ids, proposal, payment=None):
+def remove(ids, proposal, payment=None, uploaded_by=None):
     """Xóa file theo id, chỉ trong phạm vi đề xuất/phiếu đang sửa."""
     if not ids:
         return
     qs = Attachment.objects.filter(pk__in=ids, proposal=proposal, payment=payment)
+    if uploaded_by is not None:
+        qs = qs.filter(uploaded_by=uploaded_by)
     for att in qs:
         att.file.delete(save=False)
         att.delete()

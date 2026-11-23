@@ -15,7 +15,7 @@
   {% for e in errors %}<div class="flash flash-error">{{ e }}</div>{% endfor %}
 
   <form method="post" enctype="multipart/form-data" class="stack"
-        x-data="{ adv: {{ pay.amount }}, spent: '{{ data.spent }}', get n() { return Number(String(this.spent).replace(/[^\d]/g, '')) || 0 }, fmt(v) { return v.toLocaleString('vi-VN') } }">
+        x-data="{ adv: {{ pay.amount }}, total: {{ pay.proposal.total }}, spent: '{{ data.spent|escapejs }}', get n() { return Number(String(this.spent).replace(/[^\d]/g, '')) || 0 }, fmt(v) { return v.toLocaleString('vi-VN') } }">
     {% csrf_token %}
     <div class="card">
       <div class="muted small">{{ pay.code }} · {{ pay.proposal.code }}</div>
@@ -29,9 +29,12 @@
       </label>
       <div class="route" :class="n !== adv ? 'route-high' : ''"
            x-text="n === adv ? 'Khớp số tạm ứng.' : (n < adv ? 'Thừa ' + fmt(adv - n) + ' đ so với tạm ứng.' : 'Chi vượt ' + fmt(n - adv) + ' đ so với tạm ứng.')"></div>
+      <div class="route route-high" x-show="total > 0 && n > total" x-cloak
+           x-text="'Cao hơn dự toán đề xuất ' + fmt(n - total) + ' đ (dự toán: ' + fmt(total) + ' đ). Kiểm tra lại số 0 trước khi gửi.'"></div>
       <label class="field mt"><span>Hóa đơn, chứng từ (nếu có)</span>
         <input type="file" name="files" multiple accept="{{ accept }}">
       </label>
+      {% if files %}{% with removable=True %}{% include "proposals/_files.html" %}{% endwith %}{% endif %}
       <label class="field"><span>Ghi chú</span>
         <textarea name="note" rows="2" placeholder="Ví dụ: cửa hàng không xuất hóa đơn">{{ data.note }}</textarea>
       </label>

@@ -130,11 +130,16 @@ def test_return_and_resubmit(org):
 
 def test_settlement_return_goes_back_to_buying(org):
     pay = pm.create(org.thumua, approved(org), K.TAM_UNG, 1_000)
-    pay = pm.transfer(org.ketoan, pm.approve(org.ct, pay))
-    pay = pm.settle(org.thumua, pay, 900)
+    pay = pm.transfer(org.ketoan, pm.approve(org.ct, pay), files=[invoice("unc.pdf")])
+    pay = pm.settle(org.thumua, pay, 900, files=[invoice("mo.pdf")])
     pay = pm.return_(org.ct, pay, "Thiếu hóa đơn")
     assert pay.status == PS.DANG_MUA
     assert pm.actions_for(org.thumua, pay) == [pm.SETTLE]
+    unc = pay.attachments.get(name="unc.pdf")
+    mo = pay.attachments.get(name="mo.pdf")
+    # Thu mua xóa hóa đơn mờ của mình được, nhưng không xóa được UNC của kế toán
+    pay = pm.settle(org.thumua, pay, 900, files=[invoice("ro.pdf")], remove_ids=[mo.pk, unc.pk])
+    assert set(pay.attachments.values_list("name", flat=True)) == {"unc.pdf", "ro.pdf"}
 
 
 def test_cancel_only_before_first_approval(org):
