@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1F4FD1">
 <title>{% block title %}Đề xuất mua sắm{% endblock %}</title>
+<link rel="icon" type="image/png" href="{% static 'img/logo.png' %}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'css/app.css' %}">
@@ -17,7 +18,10 @@
 {% with here=request.resolver_match.url_name %}
 <div class="shell">
   <nav class="nav">
-    <a href="{% url 'home' %}" class="nav-brand">Đề xuất mua sắm</a>
+    <a href="{% url 'home' %}" class="nav-brand">
+      <img src="{% static 'img/logo.png' %}" alt="TAG" class="nav-logo">
+      <span>Đề xuất mua sắm</span>
+    </a>
     <a href="{% url 'home' %}" class="nav-link {% if here == 'home' %}is-active{% endif %}">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h4l2 3h4l2-3h4M4 13V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7M4 13v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>
       <span>Chờ xử lý</span>{% if pending_count %}<b class="badge">{{ pending_count }}</b>{% endif %}

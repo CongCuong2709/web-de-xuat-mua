@@ -177,3 +177,31 @@ def test_timeline(org):
     assert [s["state"] for s in steps] == ["done", "done", "now", "todo", "todo"]
     assert steps[2]["meta"] == "Đang chờ bạn"
     assert wf.timeline(p, org.nv_kt)[2]["meta"] == "Đang chờ"
+
+
+def test_director_as_manager_approves_once(org):
+    from accounts.models import Role
+    from proposals.printing import proposal_signatures
+
+    org.gd1.roles.add(Role.objects.get(code=Role.TRUONG_PHONG))
+    if hasattr(org.gd1, "_role_codes"):
+        del org.gd1._role_codes
+    org.nv_kt.manager = org.gd1
+    org.nv_kt.save(update_fields=["manager"])
+
+    # Dưới mốc: Giám đốc kiêm Trưởng phòng duyệt 1 lần -> Đã duyệt luôn
+    p_low = wf.create(org.nv_kt, "Bút", "Cần", items(1_000_000))
+    assert len(wf.timeline(p_low, org.gd1)) == 3  # gửi + GĐ duyệt + Thu mua
+    p_low = wf.approve(org.gd1, p_low)
+    assert p_low.status == S.DA_DUYET
+    sigs, _ = proposal_signatures(Proposal.objects.prefetch_related("logs__actor").get(pk=p_low.pk))
+    assert [s["title"] for s in sigs] == ["Người đề xuất", "Giám đốc"]
+
+    # Trên mốc: Giám đốc kiêm Trưởng phòng duyệt 1 lần -> Chờ Chủ tịch
+    p_high = wf.create(org.nv_kt, "Server", "Cần", items(20_000_000))
+    p_high = wf.approve(org.gd1, p_high)
+    assert p_high.status == S.CHO_CHU_TICH
+    p_high = wf.approve(org.ct, p_high)
+    assert p_high.status == S.DA_DUYET
+    sigs, _ = proposal_signatures(Proposal.objects.prefetch_related("logs__actor").get(pk=p_high.pk))
+    assert [s["title"] for s in sigs] == ["Người đề xuất", "Giám đốc", "Chủ tịch"]

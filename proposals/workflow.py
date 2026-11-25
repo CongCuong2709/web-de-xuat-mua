@@ -115,8 +115,11 @@ def timeline(p, viewer=None):
 
     mine = viewer is not None and bool(actions_for(viewer, p))
     now_meta = "Đang chờ bạn" if mine else "Đang chờ"
-    plan = [(S.CHO_TRUONG_PHONG, f"Trưởng phòng {p.manager or ''} duyệt".replace("  ", " ")),
-            (S.CHO_GIAM_DOC, "Giám đốc duyệt")]
+    manager_is_director = bool(p.manager and p.manager.has_role(Role.GIAM_DOC))
+    plan = [(S.CHO_TRUONG_PHONG,
+             f"{'Giám đốc' if manager_is_director else 'Trưởng phòng'} {p.manager or ''} duyệt".replace("  ", " "))]
+    if not manager_is_director or p.status == S.CHO_GIAM_DOC:
+        plan.append((S.CHO_GIAM_DOC, "Giám đốc duyệt"))
     if p.needs_chairman:
         plan.append((S.CHO_CHU_TICH, "Chủ tịch duyệt"))
 
@@ -218,7 +221,10 @@ def approve(user, p, note=""):
         raise WorkflowError("Đề xuất này không còn chờ bạn duyệt.")
     before = p.status
     if before == S.CHO_TRUONG_PHONG:
-        p.status = S.CHO_GIAM_DOC
+        if user.has_role(Role.GIAM_DOC):
+            p.status = S.CHO_CHU_TICH if p.needs_chairman else S.DA_DUYET
+        else:
+            p.status = S.CHO_GIAM_DOC
     elif before == S.CHO_GIAM_DOC:
         p.status = S.CHO_CHU_TICH if p.needs_chairman else S.DA_DUYET
     else:

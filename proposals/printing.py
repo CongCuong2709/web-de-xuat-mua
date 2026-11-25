@@ -6,6 +6,8 @@ Phần trình bày (khổ A4, lề, phông, cỡ chữ) nằm ở templates/prin
 """
 from django.utils import timezone
 
+from accounts.models import Role
+
 from .models import ApprovalLog, PaymentRequest, Proposal
 
 A = ApprovalLog.Action
@@ -109,11 +111,23 @@ def proposal_signatures(p):
         return _last(after, lambda l: l.action == A.APPROVE and l.from_status == step)
 
     tp, gd = approved(S.CHO_TRUONG_PHONG), approved(S.CHO_GIAM_DOC)
-    sigs = [
-        _sig("Người đề xuất", p.creator, start.created_at if start else None, verb="gửi"),
-        _sig("Trưởng phòng", tp.actor if tp else p.manager, tp.created_at if tp else None, tp.note if tp else ""),
-        _sig("Giám đốc", gd.actor if gd else None, gd.created_at if gd else None, gd.note if gd else ""),
-    ]
+    if tp and tp.to_status != S.CHO_GIAM_DOC:
+        # Giám đốc kiêm Trưởng phòng duyệt gộp 1 bước: chỉ hiện 1 chữ ký Giám đốc
+        sigs = [
+            _sig("Người đề xuất", p.creator, start.created_at if start else None, verb="gửi"),
+            _sig("Giám đốc", tp.actor, tp.created_at, tp.note),
+        ]
+    elif not tp and p.manager and p.manager.has_role(Role.GIAM_DOC):
+        sigs = [
+            _sig("Người đề xuất", p.creator, start.created_at if start else None, verb="gửi"),
+            _sig("Giám đốc", p.manager, None),
+        ]
+    else:
+        sigs = [
+            _sig("Người đề xuất", p.creator, start.created_at if start else None, verb="gửi"),
+            _sig("Trưởng phòng", tp.actor if tp else p.manager, tp.created_at if tp else None, tp.note if tp else ""),
+            _sig("Giám đốc", gd.actor if gd else None, gd.created_at if gd else None, gd.note if gd else ""),
+        ]
     if p.needs_chairman:
         ct = approved(S.CHO_CHU_TICH)
         sigs.append(_sig("Chủ tịch", ct.actor if ct else None, ct.created_at if ct else None, ct.note if ct else ""))
